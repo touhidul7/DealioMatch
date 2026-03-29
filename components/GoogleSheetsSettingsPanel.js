@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 
 export default function GoogleSheetsSettingsPanel({ initialSettings, tabOptions }) {
@@ -16,7 +16,7 @@ export default function GoogleSheetsSettingsPanel({ initialSettings, tabOptions 
     setFormState((current) => ({ ...current, [key]: value }));
   }
 
-  async function loadSpreadsheets() {
+  const loadSpreadsheets = useCallback(async () => {
     const loadPromise = (async () => {
       const response = await fetch('/api/google-sheets/spreadsheets');
       const data = await response.json();
@@ -30,9 +30,9 @@ export default function GoogleSheetsSettingsPanel({ initialSettings, tabOptions 
     } catch (error) {
       setStatus(error.message || 'Failed to load spreadsheets.');
     }
-  }
+  }, []);
 
-  async function loadTabs(spreadsheetId, force = false) {
+  const loadTabs = useCallback(async (spreadsheetId, force = false) => {
     if (!spreadsheetId) return;
     if (!force && Array.isArray(tabsBySheet[spreadsheetId])) return;
     try {
@@ -43,7 +43,7 @@ export default function GoogleSheetsSettingsPanel({ initialSettings, tabOptions 
     } catch (error) {
       setStatus(error.message || 'Failed to load worksheets.');
     }
-  }
+  }, [tabsBySheet]);
 
   function openAuthPopup(target) {
     const popup = window.open(
@@ -65,7 +65,14 @@ export default function GoogleSheetsSettingsPanel({ initialSettings, tabOptions 
     if (formState.gsheets_buyers_spreadsheet_id) loadTabs(formState.gsheets_buyers_spreadsheet_id);
     if (formState.gsheets_listings_spreadsheet_id) loadTabs(formState.gsheets_listings_spreadsheet_id);
     if (formState.gsheets_matching_spreadsheet_id) loadTabs(formState.gsheets_matching_spreadsheet_id);
-  }, [connected]);
+  }, [
+    connected,
+    formState.gsheets_buyers_spreadsheet_id,
+    formState.gsheets_listings_spreadsheet_id,
+    formState.gsheets_matching_spreadsheet_id,
+    loadSpreadsheets,
+    loadTabs
+  ]);
 
   useEffect(() => {
     function onMessage(event) {

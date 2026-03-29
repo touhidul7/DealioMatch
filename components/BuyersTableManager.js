@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FaEdit, FaTrash, FaCheck, FaTimes, FaCheckCircle, FaMinusCircle } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 
@@ -23,7 +23,7 @@ export default function BuyersTableManager() {
 
   const totalPages = useMemo(() => Math.max(1, Math.ceil(total / pageSize)), [total, pageSize]);
 
-  async function load() {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams({
@@ -43,11 +43,11 @@ export default function BuyersTableManager() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [active, page, pageSize, query]);
 
   useEffect(() => {
     load();
-  }, [page, active]);
+  }, [load]);
 
   async function searchNow() {
     setPage(1);

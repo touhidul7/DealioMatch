@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
 export default function BuyerDedupePanel() {
@@ -8,7 +8,7 @@ export default function BuyerDedupePanel() {
   const [statusFilter, setStatusFilter] = useState('pending');
   const [loading, setLoading] = useState(false);
 
-  async function loadCases() {
+  const loadCases = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
@@ -22,11 +22,11 @@ export default function BuyerDedupePanel() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [statusFilter]);
 
   useEffect(() => {
     loadCases();
-  }, [statusFilter]);
+  }, [loadCases]);
 
   async function runPipeline() {
     const promise = (async () => {
