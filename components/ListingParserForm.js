@@ -124,7 +124,7 @@ export default function ListingParserForm() {
       <button className="button" type="submit" disabled={loading || !rawText.trim()}>
         {loading ? 'Parsing + Saving...' : 'Parse and save listing'}
       </button>
-      {result ? <pre className="panel" style={{ whiteSpace: 'pre-wrap', margin: 0 }}>{result}</pre> : null}
+      {result ? <pre className="panel" style={{ whiteSpace: 'pre-wrap', margin: 0, maxHeight: '200px', overflow: 'auto' }}>{result}</pre> : null}
     </form>
   );
 }
