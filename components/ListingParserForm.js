@@ -49,7 +49,7 @@ function normalizeParsedListing(parsed) {
 
 export default function ListingParserForm() {
   const router = useRouter();
-  const [provider, setProvider] = useState('chatgpt');
+  const [provider, setProvider] = useState('openrouter');
   const [rawText, setRawText] = useState('');
   const [result, setResult] = useState('');
   const [loading, setLoading] = useState(false);
@@ -111,15 +111,15 @@ export default function ListingParserForm() {
       <div className="heading">
         <div>
           <h3>AI listing parser</h3>
-          <div className="muted">Use ChatGPT, Gemini, OpenRouter, or OpenClaw-compatible endpoints.</div>
+          {/* <div className="muted">Use ChatGPT, Gemini, OpenRouter, or OpenClaw-compatible endpoints.</div> */}
         </div>
       </div>
-      <select className="select" value={provider} onChange={(e) => setProvider(e.target.value)}>
+      {/* <select disabled className="select" value={provider} onChange={(e) => setProvider(e.target.value)}>
+        <option value="openrouter">OpenRouter</option>
         <option value="chatgpt">ChatGPT</option>
         <option value="gemini">Gemini</option>
-        <option value="openrouter">OpenRouter</option>
         <option value="openclaw">OpenClaw</option>
-      </select>
+      </select> */}
       <textarea className="textarea" placeholder="Paste raw listing text here..." value={rawText} onChange={(e) => setRawText(e.target.value)} />
       <button className="button" type="submit" disabled={loading || !rawText.trim()}>
         {loading ? 'Parsing + Saving...' : 'Parse and save listing'}
