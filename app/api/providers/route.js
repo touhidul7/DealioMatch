@@ -1,5 +1,8 @@
 import { parseListingWithProvider } from '@/lib/providers';
 
+export const runtime = 'nodejs';
+export const maxDuration = 60;
+
 export async function POST(request) {
   try {
     const { provider, rawText } = await request.json();

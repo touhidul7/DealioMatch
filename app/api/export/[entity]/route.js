@@ -9,6 +9,9 @@ import {
   TOP_50_COLUMNS
 } from '@/lib/sheetsSchema';
 
+export const runtime = 'nodejs';
+export const maxDuration = 60;
+
 function getEntityConfig(entity) {
   if (entity === 'buyers') return { table: 'buyers', columns: BUYERS_MASTER_COLUMNS };
   if (entity === 'buyers_raw_imports') return { table: 'buyers_raw_imports', columns: BUYERS_RAW_IMPORTS_COLUMNS };

@@ -10,6 +10,9 @@ import {
   TOP_50_COLUMNS
 } from '@/lib/sheetsSchema';
 
+export const runtime = 'nodejs';
+export const maxDuration = 60;
+
 function toSheetRows(entity, rows) {
   if (entity === 'buyers') {
     return rows.map((row) => ({

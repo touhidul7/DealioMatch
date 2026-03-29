@@ -3,6 +3,9 @@ import { getIntegrationSettings } from '@/lib/integrationSettings';
 import { buildRawImportRows, ingestRawBuyerImports, processPendingRawBuyerImports } from '@/lib/buyerIngestion';
 import { getSupabaseAdmin } from '@/lib/supabase';
 
+export const runtime = 'nodejs';
+export const maxDuration = 60;
+
 export async function POST() {
   try {
     const settings = await getIntegrationSettings();

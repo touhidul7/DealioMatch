@@ -1,6 +1,9 @@
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { buildTop50ByListingRows, computeMatches, getDefaultMatchSettings } from '@/lib/matching';
 
+export const runtime = 'nodejs';
+export const maxDuration = 60;
+
 async function loadMatchSettings(supabase) {
   const defaults = getDefaultMatchSettings();
   const { data, error } = await supabase.from('match_settings').select('setting_name, setting_value');

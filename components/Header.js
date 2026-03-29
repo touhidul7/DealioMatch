@@ -37,13 +37,13 @@ export default function Header() {
   return (
     <header className="page-header">
       <div className="page-header-left">
-        <div className="logo">🖤🤍 Dealio</div>
-        <p className="tagline">Smart buyer-listing matching, now stylish</p>
+        <div className="logo">Dealio</div>
+        <p className="tagline">Smart buyer-listing matching</p>
       </div>
 
       <div className="header-actions">
         <button className="button secondary" onClick={toggleTheme} aria-label="Toggle theme">
-          {theme === 'dark' ? '☀️ Light Mode' : '🌙 Dark Mode'}
+          {theme === 'dark' ? '☀️' : '🌙'}
         </button>
       </div>
     </header>

@@ -78,6 +78,38 @@ Dealio is a Next.js admin app for buyer/listing intake, normalization, dedupe re
 5. Install dependencies: `npm install`
 6. Run dev server: `npm run dev`
 
+## Vercel Deployment
+1. Push this repo to GitHub/GitLab/Bitbucket.
+2. Import the project in Vercel.
+3. In Vercel Project Settings -> Environment Variables, set:
+   - `NEXTAUTH_SECRET`
+   - `NEXTAUTH_URL` (your production URL, for example `https://your-app.vercel.app`)
+   - `APP_ADMIN_EMAIL`
+   - `APP_ADMIN_PASSWORD`
+   - `SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_URL` (same value as `SUPABASE_URL`)
+   - `SUPABASE_SERVICE_ROLE_KEY`
+   - `SUPABASE_ANON_KEY`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY` (same value as `SUPABASE_ANON_KEY`)
+4. Add optional integration env vars only if you use them:
+   - Google OAuth: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REFRESH_TOKEN`
+   - GHL: `GHL_API_KEY`, `GHL_LOCATION_ID`
+   - OpenAI: `OPENAI_API_KEY`, `OPENAI_MODEL`
+   - Gemini: `GEMINI_API_KEY`, `GEMINI_MODEL`
+   - OpenRouter: `OPENROUTER_API_KEY`, `OPENROUTER_MODEL`, `OPENROUTER_MODEL_FALLBACKS`, `OPENROUTER_API_URL`, `OPENROUTER_APP_NAME`, `OPENROUTER_MAX_RETRIES`
+   - OpenClaw-compatible: `OPENCLAW_API_URL`, `OPENCLAW_API_KEY`
+5. Run `scripts/schema.sql` in Supabase before first production run.
+6. Redeploy after env var changes.
+
+### Google OAuth Redirect URIs (Production)
+In Google Cloud Console OAuth Client, add:
+- `https://your-app.vercel.app/api/google-oauth/callback`
+- (Optional preview) `https://<your-preview-domain>/api/google-oauth/callback`
+
+### Notes for Vercel Functions
+- Heavy API jobs in this project are pinned to Node runtime with longer `maxDuration` where needed.
+- If you are on a Vercel plan with strict function limits, large sync jobs may still need batching.
+
 ## Important Endpoints
 - `POST /api/providers` parse listing text
 - `POST /api/match/run` run weighted matching

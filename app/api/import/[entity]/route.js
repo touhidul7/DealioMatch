@@ -3,6 +3,9 @@ import { mapListingRowToDb } from '@/lib/dataMappers';
 import { buildRawImportRows, ingestRawBuyerImports, processPendingRawBuyerImports } from '@/lib/buyerIngestion';
 import { getSupabaseAdmin } from '@/lib/supabase';
 
+export const runtime = 'nodejs';
+export const maxDuration = 60;
+
 function asText(value) {
   return value == null ? '' : String(value).trim();
 }
