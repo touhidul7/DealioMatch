@@ -22,7 +22,7 @@ export async function GET(request) {
     if (active === 'false') builder = builder.eq('is_active', false);
     if (query) {
       builder = builder.or(
-        `full_name.ilike.%${query}%,email.ilike.%${query}%,phone.ilike.%${query}%,company.ilike.%${query}%,industry_interest_raw.ilike.%${query}%`
+        `full_name.ilike.%${query}%,email.ilike.%${query}%,phone.ilike.%${query}%,company.ilike.%${query}%,industry_interest_raw.ilike.%${query}%,buyer_type.ilike.%${query}%,strategic_or_financial.ilike.%${query}%`
       );
     }
 

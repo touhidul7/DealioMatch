@@ -1,51 +1,7 @@
 import { getSheetsClient, readSheetAsObjects } from '@/lib/googleSheets';
 import { getIntegrationSettings } from '@/lib/integrationSettings';
-import { mapBuyerRowToDb } from '@/lib/dataMappers';
+import { buildRawImportRows, ingestRawBuyerImports, processPendingRawBuyerImports } from '@/lib/buyerIngestion';
 import { getSupabaseAdmin } from '@/lib/supabase';
-
-async function upsertBuyerRows(rows) {
-  const supabase = getSupabaseAdmin();
-  const { data: existing, error } = await supabase
-    .from('buyers')
-    .select('id, normalized_email, normalized_phone')
-    .limit(5000);
-  if (error) throw new Error(error.message);
-
-  const byEmail = new Map();
-  const byPhone = new Map();
-  (existing || []).forEach((buyer) => {
-    if (buyer.normalized_email) byEmail.set(buyer.normalized_email, buyer.id);
-    if (buyer.normalized_phone) byPhone.set(buyer.normalized_phone, buyer.id);
-  });
-
-  let created = 0;
-  let updated = 0;
-  for (const row of rows) {
-    const mapped = mapBuyerRowToDb(row);
-    if (!mapped.full_name && !mapped.email && !mapped.phone) continue;
-
-    const existingId = mapped.normalized_email
-      ? byEmail.get(mapped.normalized_email)
-      : mapped.normalized_phone
-        ? byPhone.get(mapped.normalized_phone)
-        : null;
-
-    if (existingId) {
-      const { error: updateError } = await supabase.from('buyers').update(mapped).eq('id', existingId);
-      if (updateError) throw new Error(updateError.message);
-      updated += 1;
-      continue;
-    }
-
-    const { data: inserted, error: insertError } = await supabase.from('buyers').insert(mapped).select('id').single();
-    if (insertError) throw new Error(insertError.message);
-    created += 1;
-    if (mapped.normalized_email) byEmail.set(mapped.normalized_email, inserted.id);
-    if (mapped.normalized_phone) byPhone.set(mapped.normalized_phone, inserted.id);
-  }
-
-  return { created, updated };
-}
 
 export async function POST() {
   try {
@@ -55,14 +11,56 @@ export async function POST() {
       return Response.json({ error: 'Missing buyers spreadsheet ID in settings.' }, { status: 400 });
     }
 
-    const rows = await readSheetAsObjects({
+    const rawRowsFromSheet = await readSheetAsObjects({
       sheets,
       spreadsheetId: settings.gsheets_buyers_spreadsheet_id,
-      tabName: settings.gsheets_buyers_master_tab || settings.gsheets_buyers_tab || 'buyers_master'
+      tabName: settings.gsheets_buyers_raw_imports_tab || 'buyers_raw_imports'
     });
 
-    const result = await upsertBuyerRows(rows);
-    return Response.json({ success: true, source_rows: rows.length, ...result });
+    const importBatchId = `GSHEETS-${Date.now()}`;
+    const rawRows = buildRawImportRows(rawRowsFromSheet, { importBatchId, sourceFileName: 'google_sheets' });
+    const ingested = await ingestRawBuyerImports(rawRows);
+    const processed = await processPendingRawBuyerImports({ importBatchId });
+
+    let dedupeUpdated = 0;
+    const dedupeTabName = settings.gsheets_buyers_dedupe_review_tab || 'buyers_dedupe_review';
+    if (dedupeTabName) {
+      try {
+        const dedupeRows = await readSheetAsObjects({
+          sheets,
+          spreadsheetId: settings.gsheets_buyers_spreadsheet_id,
+          tabName: dedupeTabName
+        });
+
+        if (dedupeRows.length) {
+          const supabase = getSupabaseAdmin();
+          for (const row of dedupeRows) {
+            const caseId = String(row.dedupe_case_id || '').trim();
+            if (!caseId) continue;
+            const reviewerStatus = String(row.reviewer_status || '').trim();
+            const reviewerNotes = String(row.reviewer_notes || '').trim();
+            if (!reviewerStatus && !reviewerNotes) continue;
+            const { error } = await supabase
+              .from('buyers_dedupe_review')
+              .update({
+                reviewer_status: reviewerStatus || 'pending',
+                reviewer_notes: reviewerNotes || null,
+                reviewed_at: new Date().toISOString()
+              })
+              .eq('dedupe_case_id', caseId);
+            if (!error) dedupeUpdated += 1;
+          }
+        }
+      } catch {}
+    }
+
+    return Response.json({
+      success: true,
+      source_rows: rawRowsFromSheet.length,
+      raw_inserted: ingested.inserted,
+      dedupe_updated_from_sheet: dedupeUpdated,
+      ...processed
+    });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

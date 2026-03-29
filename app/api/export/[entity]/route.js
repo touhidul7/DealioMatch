@@ -1,7 +1,9 @@
 import { buildExportFile } from '@/lib/fileInterop';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import {
+  BUYERS_DEDUPE_REVIEW_COLUMNS,
   BUYERS_MASTER_COLUMNS,
+  BUYERS_RAW_IMPORTS_COLUMNS,
   LISTINGS_MASTER_COLUMNS,
   MATCH_RESULTS_COLUMNS,
   TOP_50_COLUMNS
@@ -9,6 +11,8 @@ import {
 
 function getEntityConfig(entity) {
   if (entity === 'buyers') return { table: 'buyers', columns: BUYERS_MASTER_COLUMNS };
+  if (entity === 'buyers_raw_imports') return { table: 'buyers_raw_imports', columns: BUYERS_RAW_IMPORTS_COLUMNS };
+  if (entity === 'buyers_dedupe_review') return { table: 'buyers_dedupe_review', columns: BUYERS_DEDUPE_REVIEW_COLUMNS };
   if (entity === 'listings') return { table: 'listings', columns: LISTINGS_MASTER_COLUMNS };
   if (entity === 'matches') return { table: 'matches', columns: MATCH_RESULTS_COLUMNS };
   if (entity === 'top50') return { table: 'top_50_by_listing', columns: TOP_50_COLUMNS };

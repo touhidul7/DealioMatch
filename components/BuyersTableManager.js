@@ -64,6 +64,8 @@ export default function BuyersTableManager() {
       email: row.email || '',
       phone: row.phone || '',
       company: row.company || '',
+      buyer_type: row.buyer_type || '',
+      strategic_or_financial: row.strategic_or_financial || '',
       industry_interest_raw: row.industry_interest_raw || '',
       geographic_focus_raw: row.geographic_focus_raw || '',
       deal_size_min: row.deal_size_min ?? '',
@@ -160,6 +162,7 @@ export default function BuyersTableManager() {
             <th>Email</th>
             <th>Phone</th>
             <th>Company</th>
+            <th>Type</th>
             <th>Industry</th>
             <th>Geo</th>
             <th>Deal Size</th>
@@ -168,8 +171,8 @@ export default function BuyersTableManager() {
           </tr>
         </thead>
         <tbody>
-          {loading ? <tr><td colSpan="10" className="muted">Loading...</td></tr> : null}
-          {!loading && !rows.length ? <tr><td colSpan="10" className="muted">No buyers found.</td></tr> : null}
+          {loading ? <tr><td colSpan="11" className="muted">Loading...</td></tr> : null}
+          {!loading && !rows.length ? <tr><td colSpan="11" className="muted">No buyers found.</td></tr> : null}
           {!loading && rows.map((row) => {
             const editing = editingId === row.id;
             return (
@@ -179,6 +182,12 @@ export default function BuyersTableManager() {
                 <td>{editing ? <input className="input" value={draft.email || ''} onChange={(e) => setDraft({ ...draft, email: e.target.value })} /> : (row.email || '-')}</td>
                 <td>{editing ? <input className="input" value={draft.phone || ''} onChange={(e) => setDraft({ ...draft, phone: e.target.value })} /> : (row.phone || '-')}</td>
                 <td>{editing ? <input className="input" value={draft.company || ''} onChange={(e) => setDraft({ ...draft, company: e.target.value })} /> : (row.company || '-')}</td>
+                <td>{editing ? (
+                  <div className="grid" style={{ gap: 6 }}>
+                    <input className="input" placeholder="buyer_type" value={draft.buyer_type || ''} onChange={(e) => setDraft({ ...draft, buyer_type: e.target.value })} />
+                    <input className="input" placeholder="strategic_or_financial" value={draft.strategic_or_financial || ''} onChange={(e) => setDraft({ ...draft, strategic_or_financial: e.target.value })} />
+                  </div>
+                ) : ([row.buyer_type, row.strategic_or_financial].filter(Boolean).join(' / ') || '-')}</td>
                 <td>{editing ? <input className="input" value={draft.industry_interest_raw || ''} onChange={(e) => setDraft({ ...draft, industry_interest_raw: e.target.value })} /> : (row.industry_interest_raw || row.normalized_industries || '-')}</td>
                 <td>{editing ? <input className="input" value={draft.geographic_focus_raw || ''} onChange={(e) => setDraft({ ...draft, geographic_focus_raw: e.target.value })} /> : (row.geographic_focus_raw || row.geo_normalized || '-')}</td>
                 <td>{editing ? (

@@ -71,6 +71,30 @@ export default function BuyerDedupePanel() {
     await loadCases();
   }
 
+  async function applyMerge(row) {
+    const promise = (async () => {
+      const response = await fetch('/api/dedupe/buyers/apply-merge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          dedupe_case_id: row.dedupe_case_id,
+          survivor_buyer_id: row.candidate_buyer_id_1
+        })
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Merge failed.');
+      return data;
+    })();
+
+    toast.promise(promise, {
+      loading: 'Applying merge...',
+      success: 'Merge completed.',
+      error: (error) => error.message || 'Merge failed.'
+    });
+    await promise;
+    await loadCases();
+  }
+
   return (
     <div className="panel table-wrap">
       <div className="heading"><h2>Dedupe Review Pipeline</h2></div>
@@ -79,6 +103,7 @@ export default function BuyerDedupePanel() {
         <select className="select" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
           <option value="pending">pending</option>
           <option value="approved">approved</option>
+          <option value="merged">merged</option>
           <option value="rejected">rejected</option>
           <option value="">all</option>
         </select>
@@ -109,15 +134,26 @@ export default function BuyerDedupePanel() {
               <td>{row.similarity_reason}</td>
               <td>{row.suggested_action}</td>
               <td>
-                <select
-                  className="select"
-                  value={row.reviewer_status || 'pending'}
-                  onChange={(e) => updateCase(row, e.target.value)}
-                >
-                  <option value="pending">pending</option>
-                  <option value="approved">approved</option>
-                  <option value="rejected">rejected</option>
-                </select>
+                <div className="grid" style={{ gap: 6 }}>
+                  <select
+                    className="select"
+                    value={row.reviewer_status || 'pending'}
+                    onChange={(e) => updateCase(row, e.target.value)}
+                  >
+                    <option value="pending">pending</option>
+                    <option value="approved">approved</option>
+                    <option value="merged">merged</option>
+                    <option value="rejected">rejected</option>
+                  </select>
+                  <button
+                    className="button"
+                    type="button"
+                    disabled={row.reviewer_status !== 'approved'}
+                    onClick={() => applyMerge(row)}
+                  >
+                    Apply merge
+                  </button>
+                </div>
               </td>
             </tr>
           ))}

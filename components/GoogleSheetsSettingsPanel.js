@@ -175,6 +175,21 @@ export default function GoogleSheetsSettingsPanel({ initialSettings, tabOptions 
         {connected ? 'Reconnect Google account' : 'Connect Google account'}
       </button>
 
+      <div className="heading"><h3>Advisor Drive Folder Mapping</h3></div>
+      <label className="muted" style={{ display: 'grid', gap: 8 }}>
+        <span>JSON array: folder_id, advisor_id, advisor_name</span>
+        <textarea
+          className="textarea"
+          placeholder={'[\n  {"folder_id":"<google_drive_folder_id>","advisor_id":"ADV-001","advisor_name":"Alex Morgan"}\n]'}
+          value={formState.gsheets_advisor_folders_json || '[]'}
+          onChange={(e) => setValue('gsheets_advisor_folders_json', e.target.value)}
+        />
+      </label>
+      <button className="button" type="button" onClick={() => runAction('/api/google-drive/sync/advisors', null, 'Advisor Drive sync completed.')}>
+        Sync advisor CSV folders
+      </button>
+      <hr style={{ opacity: 0.2, width: '100%' }} />
+
       <div className="heading"><h3>Dealio_Buyers_Master</h3></div>
       <label className="muted" style={{ display: 'grid', gap: 8 }}>
         <span>Select spreadsheet</span>
@@ -353,6 +368,12 @@ export default function GoogleSheetsSettingsPanel({ initialSettings, tabOptions 
         </button>
         <button className="button" type="button" onClick={() => runAction('/api/google-sheets/export', { target: 'buyers' }, 'Buyers exported to Sheets.')}>
           Export buyers to Sheets
+        </button>
+        <button className="button" type="button" onClick={() => runAction('/api/google-sheets/export', { target: 'buyers_raw_imports' }, 'Buyers raw imports exported to Sheets.')}>
+          Export buyers_raw_imports
+        </button>
+        <button className="button" type="button" onClick={() => runAction('/api/google-sheets/export', { target: 'buyers_dedupe_review' }, 'Buyers dedupe review exported to Sheets.')}>
+          Export buyers_dedupe_review
         </button>
         <button className="button" type="button" onClick={() => runAction('/api/google-sheets/export', { target: 'listings' }, 'Listings exported to Sheets.')}>
           Export listings to Sheets

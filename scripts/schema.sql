@@ -15,6 +15,8 @@ create table if not exists buyers (
   state_province text,
   country text,
   geo_normalized text,
+  buyer_type text,
+  strategic_or_financial text,
   industry_interest_raw text,
   normalized_industries text,
   acquisition_criteria_raw text,
@@ -51,6 +53,8 @@ alter table buyers add column if not exists source_advisor_ids text;
 alter table buyers add column if not exists source_advisor_names text;
 alter table buyers add column if not exists source_of_funds text;
 alter table buyers add column if not exists freshness_score integer;
+alter table buyers add column if not exists buyer_type text;
+alter table buyers add column if not exists strategic_or_financial text;
 alter table buyers add column if not exists email_dedupe_key text;
 alter table buyers add column if not exists phone_dedupe_key text;
 alter table buyers add column if not exists name_company_dedupe_key text;
@@ -219,6 +223,27 @@ create table if not exists buyers_dedupe_review (
   reviewed_at timestamptz
 );
 
+create table if not exists advisor_file_imports (
+  id uuid primary key default gen_random_uuid(),
+  file_id text unique not null,
+  file_name text,
+  folder_id text,
+  advisor_id text,
+  advisor_name text,
+  import_batch_id text,
+  status text default 'processing',
+  source_rows integer default 0,
+  raw_inserted integer default 0,
+  processed_rows integer default 0,
+  created_count integer default 0,
+  updated_count integer default 0,
+  failed_count integer default 0,
+  message text,
+  imported_at timestamptz default now(),
+  created_at timestamptz default now(),
+  updated_at timestamptz default now()
+);
+
 create table if not exists sync_logs (
   id uuid primary key default gen_random_uuid(),
   source text not null,
@@ -245,4 +270,8 @@ for each row execute function set_updated_at();
 
 drop trigger if exists integration_settings_set_updated_at on integration_settings;
 create trigger integration_settings_set_updated_at before update on integration_settings
+for each row execute function set_updated_at();
+
+drop trigger if exists advisor_file_imports_set_updated_at on advisor_file_imports;
+create trigger advisor_file_imports_set_updated_at before update on advisor_file_imports
 for each row execute function set_updated_at();

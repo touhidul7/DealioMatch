@@ -1,49 +1,48 @@
 import { parseTabularFile } from '@/lib/fileInterop';
-import { mapBuyerRowToDb, mapListingRowToDb } from '@/lib/dataMappers';
+import { mapListingRowToDb } from '@/lib/dataMappers';
+import { buildRawImportRows, ingestRawBuyerImports, processPendingRawBuyerImports } from '@/lib/buyerIngestion';
 import { getSupabaseAdmin } from '@/lib/supabase';
 
-async function upsertImportedBuyers(rows) {
-  const supabase = getSupabaseAdmin();
-  const { data: existing, error } = await supabase
-    .from('buyers')
-    .select('id, normalized_email, normalized_phone')
-    .limit(5000);
-  if (error) throw new Error(error.message);
+function asText(value) {
+  return value == null ? '' : String(value).trim();
+}
 
-  const byEmail = new Map();
-  const byPhone = new Map();
-  (existing || []).forEach((buyer) => {
-    if (buyer.normalized_email) byEmail.set(buyer.normalized_email, buyer.id);
-    if (buyer.normalized_phone) byPhone.set(buyer.normalized_phone, buyer.id);
-  });
+function toNullIfEmpty(value) {
+  const text = asText(value);
+  return text === '' ? null : text;
+}
 
-  let created = 0;
-  let updated = 0;
+function toNumberOrNull(value) {
+  const text = asText(value);
+  if (!text) return null;
+  const num = Number(text);
+  return Number.isFinite(num) ? num : null;
+}
 
-  for (const row of rows.map(mapBuyerRowToDb)) {
-    if (!row.full_name && !row.email && !row.phone) continue;
-
-    const existingId = row.normalized_email
-      ? byEmail.get(row.normalized_email)
-      : row.normalized_phone
-        ? byPhone.get(row.normalized_phone)
-        : null;
-
-    if (existingId) {
-      const { error: updateError } = await supabase.from('buyers').update(row).eq('id', existingId);
-      if (updateError) throw new Error(updateError.message);
-      updated += 1;
-      continue;
-    }
-
-    const { data, error: insertError } = await supabase.from('buyers').insert(row).select('id').single();
-    if (insertError) throw new Error(insertError.message);
-    created += 1;
-    if (row.normalized_email) byEmail.set(row.normalized_email, data.id);
-    if (row.normalized_phone) byPhone.set(row.normalized_phone, data.id);
-  }
-
-  return { created, updated };
+function mapMatchRowToDb(row) {
+  return {
+    match_run_id: toNullIfEmpty(row.match_run_id),
+    match_date: toNullIfEmpty(row.match_date),
+    listing_id: toNullIfEmpty(row.listing_id),
+    buyer_id: toNullIfEmpty(row.buyer_id),
+    listing_title: toNullIfEmpty(row.listing_title),
+    buyer_name: toNullIfEmpty(row.buyer_name),
+    buyer_company: toNullIfEmpty(row.buyer_company),
+    buyer_email: toNullIfEmpty(row.buyer_email),
+    buyer_phone: toNullIfEmpty(row.buyer_phone),
+    overall_score: toNumberOrNull(row.overall_score),
+    industry_score: toNumberOrNull(row.industry_score),
+    geo_score: toNumberOrNull(row.geo_score),
+    size_score: toNumberOrNull(row.size_score),
+    revenue_score: toNumberOrNull(row.revenue_score),
+    ebitda_score: toNumberOrNull(row.ebitda_score),
+    keyword_score: toNumberOrNull(row.keyword_score),
+    freshness_score: toNumberOrNull(row.freshness_score),
+    rank_for_listing: toNumberOrNull(row.rank_for_listing),
+    rank_for_buyer: toNumberOrNull(row.rank_for_buyer),
+    match_bucket: toNullIfEmpty(row.match_bucket),
+    explanation: toNullIfEmpty(row.explanation)
+  };
 }
 
 export async function POST(request, { params }) {
@@ -60,8 +59,19 @@ export async function POST(request, { params }) {
     const supabase = getSupabaseAdmin();
 
     if (entity === 'buyers') {
-      const result = await upsertImportedBuyers(parsedRows);
-      return Response.json({ success: true, source_rows: parsedRows.length, ...result });
+      const importBatchId = `FILE-${Date.now()}`;
+      const rawRows = buildRawImportRows(parsedRows, {
+        importBatchId,
+        sourceFileName: file.name || ''
+      });
+      const ingested = await ingestRawBuyerImports(rawRows);
+      const processed = await processPendingRawBuyerImports({ importBatchId });
+      return Response.json({
+        success: true,
+        source_rows: parsedRows.length,
+        raw_inserted: ingested.inserted,
+        ...processed
+      });
     }
 
     if (entity === 'listings') {
@@ -72,7 +82,8 @@ export async function POST(request, { params }) {
     }
 
     if (entity === 'matches') {
-      const { data, error } = await supabase.from('matches').insert(parsedRows).select('id');
+      const rows = parsedRows.map(mapMatchRowToDb);
+      const { data, error } = await supabase.from('matches').insert(rows).select('id');
       if (error) throw new Error(error.message);
       return Response.json({ success: true, source_rows: parsedRows.length, inserted: data?.length || 0 });
     }

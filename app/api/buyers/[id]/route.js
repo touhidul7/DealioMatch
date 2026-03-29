@@ -16,6 +16,8 @@ export async function PATCH(request, { params }) {
       'state_province',
       'country',
       'geo_normalized',
+      'buyer_type',
+      'strategic_or_financial',
       'industry_interest_raw',
       'normalized_industries',
       'acquisition_criteria_raw',

@@ -2,7 +2,9 @@ import { getSheetsClient, writeSheetObjects } from '@/lib/googleSheets';
 import { getIntegrationSettings } from '@/lib/integrationSettings';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import {
+  BUYERS_DEDUPE_REVIEW_COLUMNS,
   BUYERS_MASTER_COLUMNS,
+  BUYERS_RAW_IMPORTS_COLUMNS,
   LISTINGS_MASTER_COLUMNS,
   MATCH_RESULTS_COLUMNS,
   TOP_50_COLUMNS
@@ -40,6 +42,24 @@ function getEntityConfig(entity, settings) {
       columns: BUYERS_MASTER_COLUMNS,
       spreadsheetId: settings.gsheets_buyers_spreadsheet_id,
       tabName: settings.gsheets_buyers_master_tab || settings.gsheets_buyers_tab || 'buyers_master'
+    };
+  }
+
+  if (entity === 'buyers_raw_imports') {
+    return {
+      table: 'buyers_raw_imports',
+      columns: BUYERS_RAW_IMPORTS_COLUMNS,
+      spreadsheetId: settings.gsheets_buyers_spreadsheet_id,
+      tabName: settings.gsheets_buyers_raw_imports_tab || 'buyers_raw_imports'
+    };
+  }
+
+  if (entity === 'buyers_dedupe_review') {
+    return {
+      table: 'buyers_dedupe_review',
+      columns: BUYERS_DEDUPE_REVIEW_COLUMNS,
+      spreadsheetId: settings.gsheets_buyers_spreadsheet_id,
+      tabName: settings.gsheets_buyers_dedupe_review_tab || 'buyers_dedupe_review'
     };
   }
 
