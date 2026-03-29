@@ -95,7 +95,7 @@ export default function GoogleSheetsSettingsPanel({ initialSettings, tabOptions 
 
     window.addEventListener('message', onMessage);
     return () => window.removeEventListener('message', onMessage);
-  }, []);
+  }, [loadSpreadsheets]);
 
   async function saveSettings(event) {
     event.preventDefault();
