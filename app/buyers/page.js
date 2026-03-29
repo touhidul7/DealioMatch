@@ -6,15 +6,17 @@ import BuyerDedupePanel from '@/components/BuyerDedupePanel';
 export default function BuyersPage() {
   return (
     <AppShell>
-      <div className="heading">
-        <div>
-          <div className="kicker">CRM</div>
-          <h1>Buyers</h1>
+      <div className="page-grid">
+        <div className="heading">
+          <div>
+            <div className="kicker">CRM</div>
+            <h1>Buyers</h1>
+          </div>
         </div>
+        <DataIOPanel entity="buyers" title="Buyers Import / Export" />
+        <BuyersTableManager />
+        <BuyerDedupePanel />
       </div>
-      <DataIOPanel entity="buyers" title="Buyers Import / Export" />
-      <BuyersTableManager />
-      <BuyerDedupePanel />
     </AppShell>
   );
 }

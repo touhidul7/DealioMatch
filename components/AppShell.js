@@ -1,10 +1,14 @@
 import Sidebar from '@/components/Sidebar';
+import Header from '@/components/Header';
 
 export default function AppShell({ children }) {
   return (
     <div className="layout">
       <Sidebar />
-      <main className="main">{children}</main>
+      <div className="content-area">
+        <Header />
+        <main className="main">{children}</main>
+      </div>
     </div>
   );
 }

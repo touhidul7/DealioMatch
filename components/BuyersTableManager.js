@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { FaEdit, FaTrash, FaCheck, FaTimes, FaCheckCircle, FaMinusCircle } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 
 function moneyRange(min, max) {
@@ -205,13 +206,21 @@ export default function BuyersTableManager() {
                 <td>
                   {editing ? (
                     <div className="grid" style={{ gap: 6 }}>
-                      <button className="button" type="button" onClick={saveEdit}>Save</button>
-                      <button className="button" type="button" onClick={() => { setEditingId(''); setDraft({}); }}>Cancel</button>
+                      <button className="button icon-btn" type="button" title="Save changes" onClick={saveEdit}>
+                        <FaCheck />
+                      </button>
+                      <button className="button icon-btn" type="button" title="Cancel editing" onClick={() => { setEditingId(''); setDraft({}); }}>
+                        <FaTimes />
+                      </button>
                     </div>
                   ) : (
                     <div className="grid" style={{ gap: 6 }}>
-                      <button className="button" type="button" onClick={() => startEdit(row)}>Edit</button>
-                      <button className="button" type="button" onClick={() => deleteOne(row.id)}>Delete</button>
+                      <button className="button icon-btn" type="button" title="Edit buyer" onClick={() => startEdit(row)}>
+                        <FaEdit />
+                      </button>
+                      <button className="button icon-btn" type="button" title="Delete buyer" onClick={() => deleteOne(row.id)}>
+                        <FaTrash />
+                      </button>
                     </div>
                   )}
                 </td>

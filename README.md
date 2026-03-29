@@ -1,50 +1,103 @@
 # Dealio App
 
-A Next.js + React + NextAuth + Supabase app for syncing buyers from GHL, storing listings, parsing listing text with AI providers, and scoring buyer-listing matches with SOP-aligned weighted matching.
+Dealio is a Next.js admin app for buyer/listing intake, normalization, dedupe review, weighted matching, and Google Sheets integration.
 
 ## Stack
-- Next.js App Router
+- Next.js (App Router)
 - React (JS/JSX)
-- NextAuth credentials login
+- NextAuth (credentials auth)
 - Supabase Postgres
-- GHL API sync
-- Optional AI providers: ChatGPT, Gemini, OpenClaw-compatible endpoint
+- Google APIs (Sheets + Drive via OAuth)
+- AI parsing providers: ChatGPT, Gemini, OpenRouter, OpenClaw-compatible
 
-## Features
-- Admin login with NextAuth credentials
-- Dashboard with buyers, listings, matches, and sync logs
-- GHL buyer sync endpoint
-- Listings page with AI parser panel
-- Match engine endpoint with weighted SOP scoring, ranking, buckets, explanations
-- Dynamic match settings in `match_settings` table and settings UI
-- `top_50_by_listing` output table + match run metadata (`match_runs`)
-- Google Sheets integration settings panel (SOP tab selectors)
-- Google Sheets buyer sync + buyer/listing/match export endpoints
-- CSV/XLSX import + export for buyers, listings, and matches
-- Supabase SQL schema included
+## Core Features
+- Admin login and protected dashboard/pages/APIs
+- Buyers and Listings table managers:
+  - inline edit + delete
+  - bulk activate/deactivate/delete
+  - search + pagination
+- Listings AI parser:
+  - parses raw text via selected provider
+  - saves one or many parsed listings in batch
+- SOP-style match engine:
+  - weighted scoring + thresholds
+  - `matches` + `top_50_by_listing`
+  - run metadata in `match_runs`
+  - editable match weights in Settings
+- Buyers raw ingestion pipeline:
+  - `buyers_raw_imports` intake
+  - processing into `buyers` master
+  - status tracking (`pending/processed/failed/skipped`)
+- Dedupe review pipeline:
+  - generate duplicate cases in `buyers_dedupe_review`
+  - approve/reject/merged statuses
+  - apply-merge action merges two buyers and rewires related match rows
+- Data IO:
+  - CSV/XLSX import
+  - CSV/XLSX export
+- Google Sheets integration:
+  - OAuth popup connect flow
+  - spreadsheet + worksheet selectors for 3 SOP spreadsheets
+  - export buyers/listings/matches/top50/match_settings
+  - export `buyers_raw_imports` and `buyers_dedupe_review`
+  - buyers sync from Sheets raw imports
+- Advisor Drive automation:
+  - map Drive folder IDs to advisor IDs/names in settings
+  - sync CSV files from advisor folders
+  - avoid re-importing with `advisor_file_imports` processed-file tracking
+
+## SOP Spreadsheet/Tabs Supported
+- `Dealio_Buyers_Master`
+  - `buyers_raw_imports`
+  - `buyers_master`
+  - `buyers_dedupe_review`
+- `Dealio_Listings_Master`
+  - `listings_master`
+- `Dealio_Matching_Engine`
+  - `match_results`
+  - `top_50_by_listing`
+  - `match_settings`
 
 ## Setup
-1. Copy `.env.example` to `.env.local`
-2. Fill in your values:
+1. Copy `.env.example` to `.env` (or `.env.local` if you prefer local-only).
+2. Configure required env values:
    - `NEXTAUTH_SECRET`
    - `APP_ADMIN_EMAIL`
    - `APP_ADMIN_PASSWORD`
    - `SUPABASE_URL`
    - `SUPABASE_SERVICE_ROLE_KEY`
    - `SUPABASE_ANON_KEY`
-   - `GHL_API_KEY`
-   - `GHL_LOCATION_ID`
-   - optional provider keys for OpenAI, Gemini, OpenClaw
-3. Run `scripts/schema.sql` in your Supabase SQL editor
-4. Install dependencies with `npm install`
-5. Start with `npm run dev`
+3. Configure optional integrations as needed:
+   - GHL: `GHL_API_KEY`, `GHL_LOCATION_ID`
+   - OpenAI: `OPENAI_API_KEY`
+   - Gemini: `GEMINI_API_KEY`
+   - OpenRouter: `OPENROUTER_API_KEY`, `OPENROUTER_MODEL`
+   - OpenClaw-compatible: endpoint/model/auth envs used by your deployment
+   - Google OAuth: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` (refresh token saved via OAuth popup)
+4. Run `scripts/schema.sql` in Supabase SQL editor.
+5. Install dependencies: `npm install`
+6. Run dev server: `npm run dev`
 
-## Notes
-- Run the updated `scripts/schema.sql` in Supabase after pulling new changes.
-- Matching settings are editable from `/settings` and used by `/api/match/run`.
-- Google Sheets settings are editable in `/settings` and saved in `integration_settings`.
-- Google auth supports service account or OAuth refresh-token mode.
-- Settings page supports OAuth popup connect + spreadsheet/worksheet selection.
-- For service account mode: Sheets API enabled + spreadsheet share to service account email.
-- GHL field mapping may need adjustment based on your exact custom fields.
-- OpenClaw support is implemented as a generic compatible HTTP provider endpoint; plug in your own endpoint and auth details.
+## Important Endpoints
+- `POST /api/providers` parse listing text
+- `POST /api/match/run` run weighted matching
+- `GET/PUT /api/match/settings` read/update match weights
+- `POST /api/google-sheets/sync/buyers` sync buyers from Sheets raw imports
+- `POST /api/google-sheets/export` export datasets to selected Sheets tabs
+- `POST /api/google-drive/sync/advisors` ingest advisor CSVs from mapped Drive folders
+- `POST /api/dedupe/buyers/run` build dedupe queue
+- `POST /api/dedupe/buyers/apply-merge` merge approved duplicate buyers
+
+## Settings Notes
+- Google settings are saved in `integration_settings`.
+- Advisor folder mapping uses `gsheets_advisor_folders_json` as JSON array:
+```json
+[
+  {"folder_id":"<drive_folder_id>", "advisor_id":"ADV-001", "advisor_name":"Alex Morgan"}
+]
+```
+- Reconnect Google account if shared spreadsheets are not visible after permission changes.
+
+## Apps Script Note
+- If you run sheet automation via Apps Script triggers only, you do not need Apps Script deployment.
+- Deployment is only required for web app endpoints (`doGet`/`doPost`) or external callers.

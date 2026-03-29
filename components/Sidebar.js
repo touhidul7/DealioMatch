@@ -4,11 +4,11 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const items = [
-  { href: '/dashboard', label: 'Dashboard' },
-  { href: '/buyers', label: 'Buyers' },
-  { href: '/listings', label: 'Listings' },
-  { href: '/matches', label: 'Matches' },
-  { href: '/settings', label: 'Settings' }
+  { href: '/dashboard', label: 'Dashboard', icon: '📊' },
+  { href: '/buyers', label: 'Buyers', icon: '🧑‍💼' },
+  { href: '/listings', label: 'Listings', icon: '🏷️' },
+  { href: '/matches', label: 'Matches', icon: '🤝' },
+  { href: '/settings', label: 'Settings', icon: '⚙️' }
 ];
 
 export default function Sidebar() {
@@ -21,6 +21,9 @@ export default function Sidebar() {
       <nav className="nav">
         {items.map((item) => (
           <Link key={item.href} href={item.href} className={pathname.startsWith(item.href) ? 'active' : ''}>
+            <span aria-hidden="true" style={{ marginRight: 8 }}>
+              {item.icon}
+            </span>
             {item.label}
           </Link>
         ))}
