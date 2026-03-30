@@ -13,7 +13,7 @@ const themes = {
   }
 };
 
-export default function Header() {
+export default function Header({ onOpenSidebar }) {
   const [theme, setTheme] = useState('dark');
 
   useEffect(() => {
@@ -37,6 +37,14 @@ export default function Header() {
   return (
     <header className="page-header">
       <div className="page-header-left">
+        <button
+          className="sidebar-toggle"
+          type="button"
+          onClick={onOpenSidebar}
+          aria-label="Open navigation menu"
+        >
+          Menu
+        </button>
         <div className="logo">Dealio</div>
         <p className="tagline">Smart buyer-listing matching</p>
       </div>
